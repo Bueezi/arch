@@ -21,6 +21,13 @@ get_swap_size() {
 select_disk
 get_swap_size
 
+# Determine partition suffix (e.g., 'p' for mmcblk1, none for sda)
+if [[ $selected_disk =~ mmcblk[0-9] ]]; then
+    part_suffix="p"
+else
+    part_suffix=""
+fi
+
 # Set variables
 HOSTNAME="arch"               # Hostname
 USERNAME="ben"                # Username
@@ -44,18 +51,18 @@ fi
 
 # Format the partitions
 echo "Formatting the partitions..."
-mkfs.fat -F32 "${selected_disk}1"
+mkfs.fat -F32 "${selected_disk}${part_suffix}1"
 if [ "$swap_size" -ne 0 ]; then
-    mkswap "${selected_disk}2"
-    swapon "${selected_disk}2"
+    mkswap "${selected_disk}${part_suffix}2"
+    swapon "${selected_disk}${part_suffix}2"
 fi
-mkfs.ext4 "${selected_disk}3"
+mkfs.ext4 "${selected_disk}${part_suffix}3"
 
 # Mount the partitions
 echo "Mounting the partitions..."
-mount "${selected_disk}3" /mnt
+mount "${selected_disk}${part_suffix}3" /mnt
 mkdir -p /mnt/boot/efi
-mount "${selected_disk}1" /mnt/boot/efi
+mount "${selected_disk}${part_suffix}1" /mnt/boot/efi
 
 # Install base system and necessary packages
 echo "Installing base system..."
