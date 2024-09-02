@@ -66,7 +66,7 @@ mount "${selected_disk}${part_suffix}1" /mnt/boot/efi
 
 # Install base system and necessary packages
 echo "Installing base system..."
-pacstrap /mnt base base-devel linux linux-firmware sudo networkmanager grub efibootmgr kitty vim sddm i3-wm i3status nitrogen dmenu curl thunar pulseaudio pavucontrol bluez blueman network-manager-applet firefox git
+pacstrap /mnt base base-devel linux linux-firmware sudo networkmanager grub efibootmgr kitty vim sddm i3-wm i3status feh dmenu curl thunar pulseaudio pavucontrol bluez blueman network-manager-applet firefox git
 
 # Generate fstab
 echo "Generating fstab..."
@@ -91,10 +91,10 @@ echo "LANG=$LOCALE" > /etc/locale.conf
 echo "Setting keyboard layout..."
 echo "KEYMAP=$KEYMAP" > /etc/vconsole.conf
 
-# Configure X11 keyboard layout
-echo "Configuring X11 keyboard layout..."
-mkdir -p /etc/X11/xorg.conf.d
-echo -e "Section \"InputClass\"\n\tIdentifier \"keyboard\"\n\tMatchIsKeyboard \"on\"\n\tOption \"XkbLayout\" \"be\"\n\tOption \"XkbVariant\" \"latin1\"\nEndSection" > /etc/X11/xorg.conf.d/00-keyboard.conf
+# Set the X11 keymap for the user session
+echo "setxkbmap -layout be -variant latin1" >> /home/$USERNAME/.xprofile
+chown $USERNAME:$USERNAME /home/$USERNAME/.xprofile
+
 
 # Set the hostname
 echo "Setting hostname..."
@@ -107,11 +107,12 @@ echo "127.0.1.1   $HOSTNAME.localdomain $HOSTNAME" >> /etc/hosts
 echo "Setting root password..."
 echo "root:$PASSWORD" | chpasswd
 
-# Create new user with the same password
-echo "Creating user $USERNAME..."
-useradd -m -G wheel $USERNAME
+
+# Create a new user with the specified username and password
+useradd -m -s /bin/bash "$USERNAME"
 echo "$USERNAME:$PASSWORD" | chpasswd
-sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
+# Grant the user sudo privileges
+usermod -aG sudo "$USERNAME"
 
 # Enable essential services
 systemctl enable NetworkManager
