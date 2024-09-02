@@ -2,14 +2,25 @@
 
 # Function to prompt for disk selection
 select_disk() {
-    disks=($(lsblk -nd --output NAME,SIZE,TYPE | grep disk | awk '{print $1 " (" $2 ")"}'))
+    disks=($(lsblk -nd --output NAME,SIZE | grep disk | awk '{print $1 " (" $2 ")"}'))
+    if [ ${#disks[@]} -eq 0 ]; then
+        echo "No disks found!"
+        exit 1
+    fi
     echo "Available disks:"
     for i in "${!disks[@]}"; do
         echo "$i) ${disks[$i]}"
     done
-    read -p "Select a disk by number: " disk_index
-    selected_disk="/dev/$(echo ${disks[$disk_index]} | awk '{print $1}')"
-    echo "You selected $selected_disk"
+    while true; do
+        read -p "Select a disk by number: " disk_index
+        if [[ $disk_index =~ ^[0-9]+$ ]] && [ $disk_index -ge 0 ] && [ $disk_index -lt ${#disks[@]} ]; then
+            selected_disk="/dev/$(echo ${disks[$disk_index]} | awk '{print $1}')"
+            echo "You selected $selected_disk"
+            break
+        else
+            echo "Invalid selection, please try again."
+        fi
+    done
 }
 
 # Function to prompt for swap size
