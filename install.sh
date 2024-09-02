@@ -2,23 +2,15 @@
 
 # Function to prompt for disk selection
 select_disk() {
-    # Filter to only show primary disks, excluding partitions or boot devices
-    disks=($(lsblk -nd --output NAME,SIZE,TYPE | grep -E "disk" | awk '{print $1}'))
-    sizes=($(lsblk -nd --output NAME,SIZE,TYPE | grep -E "disk" | awk '{print $2}'))
-    
     echo "Available disks:"
+    disks=($(lsblk -nd --output NAME,SIZE | awk '{print $1 " " $2}'))
     for i in "${!disks[@]}"; do
-        echo "$((i + 1))) /dev/${disks[$i]} : ${sizes[$i]}"
+        name=$(echo ${disks[$i]} | awk '{print $1}')
+        size=$(echo ${disks[$i]} | awk '{print $2}')
+        echo "$i) /dev/$name ($size)"
     done
-    
     read -p "Select a disk by number: " disk_index
-    disk_index=$((disk_index - 1))  # Convert to zero-based index
-    if [[ $disk_index -lt 0 || $disk_index -ge ${#disks[@]} ]]; then
-        echo "Invalid selection. Exiting."
-        exit 1
-    fi
-    
-    selected_disk="/dev/${disks[$disk_index]}"
+    selected_disk="/dev/$(echo ${disks[$disk_index]} | awk '{print $1}')"
     echo "You selected $selected_disk"
 }
 
@@ -32,7 +24,7 @@ select_disk
 get_swap_size
 
 # Determine partition suffix (e.g., 'p' for mmcblk1, none for sda)
-if [[ $selected_disk =~ /dev/mmcblk[0-9] ]]; then
+if [[ $selected_disk =~ mmcblk[0-9] ]]; then
     part_suffix="p"
 else
     part_suffix=""
