@@ -2,13 +2,13 @@
 
 # Function to prompt for disk selection
 select_disk() {
-    disks=($(lsblk -nd --output NAME,SIZE,TYPE | grep disk | awk '{print $1 " (" $2 ")"}'))
+    disks=($(lsblk -nd --output NAME,SIZE,TYPE | grep disk | awk '{print "/dev/" $1 " : " $2}'))
     echo "Available disks:"
     for i in "${!disks[@]}"; do
         echo "$i) ${disks[$i]}"
     done
     read -p "Select a disk by number: " disk_index
-    selected_disk="/dev/$(echo ${disks[$disk_index]} | awk '{print $1}')"
+    selected_disk="${disks[$disk_index]}"
     echo "You selected $selected_disk"
 }
 
@@ -21,8 +21,11 @@ get_swap_size() {
 select_disk
 get_swap_size
 
+# Extract the disk device name (e.g., /dev/sda)
+disk_device=$(echo $selected_disk | awk '{print $1}')
+
 # Determine partition suffix (e.g., 'p' for mmcblk1, none for sda)
-if [[ $selected_disk =~ mmcblk[0-9] ]]; then
+if [[ $disk_device =~ mmcblk[0-9] ]]; then
     part_suffix="p"
 else
     part_suffix=""
@@ -37,32 +40,32 @@ KEYMAP="be-latin1"            # Keyboard layout
 TIMEZONE="Europe/Brussels"    # Timezone
 
 # Partition the disk
-echo "Partitioning the disk $selected_disk..."
-parted -s "$selected_disk" mklabel gpt
-parted -s "$selected_disk" mkpart primary fat32 1MiB 101MiB
-parted -s "$selected_disk" set 1 esp on
+echo "Partitioning the disk $disk_device..."
+parted -s "$disk_device" mklabel gpt
+parted -s "$disk_device" mkpart primary fat32 1MiB 101MiB
+parted -s "$disk_device" set 1 esp on
 
 if [ "$swap_size" -ne 0 ]; then
-    parted -s "$selected_disk" mkpart primary linux-swap 101MiB "$((101 + swap_size * 1024))MiB"
-    parted -s "$selected_disk" mkpart primary ext4 "$((101 + swap_size * 1024))MiB" 100%
+    parted -s "$disk_device" mkpart primary linux-swap 101MiB "$((101 + swap_size * 1024))MiB"
+    parted -s "$disk_device" mkpart primary ext4 "$((101 + swap_size * 1024))MiB" 100%
 else
-    parted -s "$selected_disk" mkpart primary ext4 101MiB 100%
+    parted -s "$disk_device" mkpart primary ext4 101MiB 100%
 fi
 
 # Format the partitions
 echo "Formatting the partitions..."
-mkfs.fat -F32 "${selected_disk}${part_suffix}1"
+mkfs.fat -F32 "${disk_device}${part_suffix}1"
 if [ "$swap_size" -ne 0 ]; then
-    mkswap "${selected_disk}${part_suffix}2"
-    swapon "${selected_disk}${part_suffix}2"
+    mkswap "${disk_device}${part_suffix}2"
+    swapon "${disk_device}${part_suffix}2"
 fi
-mkfs.ext4 "${selected_disk}${part_suffix}3"
+mkfs.ext4 "${disk_device}${part_suffix}3"
 
 # Mount the partitions
 echo "Mounting the partitions..."
-mount "${selected_disk}${part_suffix}3" /mnt
+mount "${disk_device}${part_suffix}3" /mnt
 mkdir -p /mnt/boot/efi
-mount "${selected_disk}${part_suffix}1" /mnt/boot/efi
+mount "${disk_device}${part_suffix}1" /mnt/boot/efi
 
 # Install base system and necessary packages
 echo "Installing base system..."
@@ -115,7 +118,7 @@ systemctl enable sddm
 
 # Install and configure GRUB
 echo "Installing GRUB..."
-grub-install "$selected_disk"
+grub-install "$disk_device"
 
 # Generate GRUB configuration
 echo "Generating GRUB configuration..."
