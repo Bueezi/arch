@@ -66,7 +66,7 @@ mount "${selected_disk}${part_suffix}1" /mnt/boot/efi
 
 # Install base system and necessary packages
 echo "Installing base system..."
-pacstrap /mnt base base-devel linux linux-firmware vim sudo networkmanager grub efibootmgr sddm i3-wm i3status dmenu firefox curl
+pacstrap /mnt base base-devel linux linux-firmware sudo networkmanager grub efibootmgr vim sddm i3-wm i3status dmenu curl thunar pavucontrol blueman network-manager-applet firefox
 
 # Generate fstab
 echo "Generating fstab..."
