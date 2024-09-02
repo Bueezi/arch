@@ -91,6 +91,11 @@ echo "LANG=$LOCALE" > /etc/locale.conf
 echo "Setting keyboard layout..."
 echo "KEYMAP=$KEYMAP" > /etc/vconsole.conf
 
+# Configure X11 keyboard layout
+echo "Configuring X11 keyboard layout..."
+mkdir -p /etc/X11/xorg.conf.d
+echo -e "Section \"InputClass\"\n\tIdentifier \"keyboard\"\n\tMatchIsKeyboard \"on\"\n\tOption \"XkbLayout\" \"be\"\n\tOption \"XkbVariant\" \"latin1\"\nEndSection" > /etc/X11/xorg.conf.d/00-keyboard.conf
+
 # Set the hostname
 echo "Setting hostname..."
 echo "$HOSTNAME" > /etc/hostname
@@ -117,9 +122,11 @@ systemctl enable sddm
 echo "Installing GRUB..."
 grub-install "$selected_disk"
 
-# Generate GRUB configuration
+# Generate GRUB configuration with no timeout
 echo "Generating GRUB configuration..."
 grub-mkconfig -o /boot/grub/grub.cfg
+sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/' /etc/default/grub
+sed -i 's/^GRUB_HIDDEN_TIMEOUT=.*/GRUB_HIDDEN_TIMEOUT=0/' /etc/default/grub
 
 # Download i3 and i3status configuration files
 echo "Downloading i3 configuration..."
