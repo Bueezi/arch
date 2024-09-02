@@ -2,9 +2,9 @@
 
 # Function to prompt for disk selection
 select_disk() {
-    # List disks and their sizes
-    disks=($(lsblk -nd --output NAME,SIZE,TYPE | grep disk | awk '{print $1}'))
-    sizes=($(lsblk -nd --output NAME,SIZE,TYPE | grep disk | awk '{print $2}'))
+    # Filter to only show primary disks, excluding partitions or boot devices
+    disks=($(lsblk -nd --output NAME,SIZE,TYPE | grep -E "disk" | awk '{print $1}'))
+    sizes=($(lsblk -nd --output NAME,SIZE,TYPE | grep -E "disk" | awk '{print $2}'))
     
     echo "Available disks:"
     for i in "${!disks[@]}"; do
