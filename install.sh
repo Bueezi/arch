@@ -3,14 +3,15 @@
 # Function to prompt for disk selection
 select_disk() {
     echo "Available disks:"
-    disks=($(lsblk -nd --output NAME,SIZE | awk '{print $1 " " $2}'))
-    for i in "${!disks[@]}"; do
-        name=$(echo ${disks[$i]} | awk '{print $1}')
-        size=$(echo ${disks[$i]} | awk '{print $2}')
-        echo "$i) /dev/$name ($size)"
+    # Use lsblk to list disks and their sizes
+    local disks=($(lsblk -dno NAME,SIZE | awk '{print "/dev/" $1 " " $2}'))
+    local index=0
+    for disk in "${disks[@]}"; do
+        echo "$index) $disk"
+        ((index++))
     done
     read -p "Select a disk by number: " disk_index
-    selected_disk="/dev/$(echo ${disks[$disk_index]} | awk '{print $1}')"
+    selected_disk="${disks[$disk_index]%% *}"
     echo "You selected $selected_disk"
 }
 
