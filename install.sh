@@ -66,7 +66,7 @@ mount "${selected_disk}${part_suffix}1" /mnt/boot/efi
 
 # Install base system and necessary packages
 echo "Installing base system..."
-pacstrap /mnt base base-devel linux linux-firmware sudo networkmanager grub efibootmgr vim sddm i3-wm i3status dmenu curl thunar pulseaudio pavucontrol bluez blueman network-manager-applet firefox
+pacstrap /mnt base base-devel linux linux-firmware sudo networkmanager grub efibootmgr vim sddm i3-wm i3status dmenu curl thunar pulseaudio pavucontrol bluez blueman network-manager-applet firefox git
 
 # Generate fstab
 echo "Generating fstab..."
@@ -130,6 +130,14 @@ chown $USERNAME:$USERNAME /home/$USERNAME/.config/i3/config
 echo "Downloading i3status configuration..."
 curl -o /home/$USERNAME/.i3status.conf https://raw.githubusercontent.com/Bueezi/arch/main/.i3status.conf
 chown $USERNAME:$USERNAME /home/$USERNAME/.i3status.conf
+
+# Download wallpapers
+echo "Downloading wallpapers..."
+mkdir -p /home/$USERNAME/Pictures
+git clone --depth 1 https://github.com/Bueezi/arch.git /tmp/arch-repo
+cp -r /tmp/arch-repo/wallpapers/* /home/$USERNAME/Pictures/
+chown -R $USERNAME:$USERNAME /home/$USERNAME/Pictures/
+rm -rf /tmp/arch-repo
 
 EOF
 
