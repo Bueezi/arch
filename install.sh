@@ -92,9 +92,7 @@ echo "Setting keyboard layout..."
 echo "KEYMAP=$KEYMAP" > /etc/vconsole.conf
 
 # Set the X11 keymap for the user session
-echo "setxkbmap -layout be -variant latin1" >> /home/$USERNAME/.xprofile
-chown $USERNAME:$USERNAME /home/$USERNAME/.xprofile
-
+setxkbmap -layout be
 
 # Set the hostname
 echo "Setting hostname..."
