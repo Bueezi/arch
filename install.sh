@@ -2,12 +2,10 @@
 
 # Function to prompt for disk selection
 select_disk() {
+    disks=($(lsblk -nd --output NAME,SIZE,TYPE | grep disk | awk '{print $1 " (" $2 ")"}'))
     echo "Available disks:"
-    disks=($(lsblk -nd --output NAME,SIZE | awk '{print $1 " " $2}'))
     for i in "${!disks[@]}"; do
-        name=$(echo ${disks[$i]} | awk '{print $1}')
-        size=$(echo ${disks[$i]} | awk '{print $2}')
-        echo "$i) /dev/$name ($size)"
+        echo "$i) ${disks[$i]}"
     done
     read -p "Select a disk by number: " disk_index
     selected_disk="/dev/$(echo ${disks[$disk_index]} | awk '{print $1}')"
