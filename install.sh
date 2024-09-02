@@ -91,8 +91,17 @@ echo "LANG=$LOCALE" > /etc/locale.conf
 echo "Setting keyboard layout..."
 echo "KEYMAP=$KEYMAP" > /etc/vconsole.conf
 
-# Set the X11 keymap for the user session
-setxkbmap -layout be
+# Set the X11 keymap
+mkdir -p /etc/X11/xorg.conf.d
+cat <<EOL > /etc/X11/xorg.conf.d/00-keyboard.conf
+Section "InputClass"
+    Identifier "keyboard"
+    MatchIsKeyboard "on"
+    Option "XkbLayout" "be"
+    Option "XkbVariant" "latin1"
+EndSection
+EOL
+
 
 # Set the hostname
 echo "Setting hostname..."
@@ -109,8 +118,11 @@ echo "root:$PASSWORD" | chpasswd
 # Create a new user with the specified username and password
 useradd -m -s /bin/bash "$USERNAME"
 echo "$USERNAME:$PASSWORD" | chpasswd
-# Grant the user sudo privileges
-usermod -aG sudo "$USERNAME"
+# Add user to the wheel group for sudo privileges
+usermod -aG wheel "$USERNAME"
+# Ensure sudoers file allows wheel group members to use sudo
+grep -q "^%wheel" /etc/sudoers || echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+
 
 # Enable essential services
 systemctl enable NetworkManager
